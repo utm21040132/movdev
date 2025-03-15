@@ -6,6 +6,9 @@ const util = require('util');
 const textToSpeech = require('@google-cloud/text-to-speech'); //Importamos el cliente de Google Text-to-Speech
 const app = express();
 const port = process.env.PORT || 4000; //Usamos el puerto definido en el archivo .env o el 4000 por defecto
+const cors = require('cors');
+app.use(cors());
+
 
 app.use(express.json());
 

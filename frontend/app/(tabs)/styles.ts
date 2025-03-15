@@ -81,6 +81,14 @@ const styles = StyleSheet.create({
     color: "#777", // Texto gris oscuro
     textDecorationLine: "underline",
   },
+  loader: {
+    marginTop: 20,
+  },
+  audioText: {
+    fontSize: 16,
+    color: '#333333',
+    marginTop: 10,
+  },
 });
 
 export default styles;
