@@ -5,7 +5,7 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Pressable, // Para personalizar los botones
+  Pressable,
   ActivityIndicator,
 } from "react-native";
 import axios from "axios";
@@ -17,6 +17,7 @@ const Index: React.FC = () => {
   const [loading, setLoading] = useState(false); // Indicador de carga
   const [charCount, setCharCount] = useState(0); // Contador de caracteres
   const [audioUrl, setAudioUrl] = useState(""); // URL del archivo de audio
+  const [selectedTab, setSelectedTab] = useState("Texto"); // Controla la pestaña activa
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -39,69 +40,102 @@ const Index: React.FC = () => {
     }
   };
 
+  const handleTabPress = (tab: string) => {
+    setSelectedTab(tab);
+  };
+
   return (
     <View style={styles.container}>
       {/* Pestañas de navegación */}
       <View style={styles.tabs}>
         {["Texto", "Audio"].map((tab, index) => (
-          <TouchableOpacity key={index} style={styles.tab}>
+          <TouchableOpacity
+            key={index}
+            style={[styles.tab, selectedTab === tab && styles.selectedTab]}
+            onPress={() => handleTabPress(tab)}
+          >
             <Text style={styles.tabText}>{tab}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Contenido principal */}
-      <View style={styles.content}>
-        <Text style={styles.welcomeText}>¡Bienvenido!</Text>
-        <Text style={styles.questionText}>¿Qué historia tendremos hoy?</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Escribe aquí tu historia..."
-          placeholderTextColor="#aaa"
-          value={inputText}
-          onChangeText={(text) => {
-            setInputText(text); // Actualiza el texto ingresado
-            setCharCount(text.length); // Actualiza el contador de caracteres
-          }}
-          maxLength={120}
-        />
-        <Text style={styles.charCount}>{charCount}/120</Text>
+      {/* Contenido principal para "Texto" */}
+      {selectedTab === "Texto" && (
+        <View style={styles.content}>
+          <Text style={styles.welcomeText}>¡Bienvenido!</Text>
+          <Text style={styles.questionText}>¿Qué historia tendremos hoy?</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Escribe aquí tu historia..."
+            placeholderTextColor="#aaa"
+            value={inputText}
+            onChangeText={(text) => {
+              setInputText(text); // Actualiza el texto ingresado
+              setCharCount(text.length); // Actualiza el contador de caracteres
+            }}
+            maxLength={120}
+          />
+          <Text style={styles.charCount}>{charCount}/120</Text>
 
-        {/* Botón "Generar" */}
-        <Pressable
-          style={styles.button}
-          onPress={handleGenerate}
-          disabled={loading || charCount === 0}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? "Generando..." : "Generar"}
-          </Text>
-        </Pressable>
+          {/* Botón "Generar" */}
+          <Pressable
+            style={styles.button}
+            onPress={handleGenerate}
+            disabled={loading || charCount === 0}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? "Generando..." : "Generar"}
+            </Text>
+          </Pressable>
 
-        {/* Indicador de carga */}
-        {loading && (
-          <ActivityIndicator size="large" color="#007BFF" style={styles.loader} />
-        )}
+          {/* Indicador de carga */}
+          {loading && (
+            <ActivityIndicator
+              size="large"
+              color="#007BFF"
+              style={styles.loader}
+            />
+          )}
 
-        <ScrollView style={styles.resultContainer}>
-          <Text style={styles.generatedText}>
-            {generatedText || "Tu historia aparecerá aquí..."}
-          </Text>
-        </ScrollView>
+          <ScrollView style={styles.resultContainer}>
+            <Text style={styles.generatedText}>
+              {generatedText || "Tu historia aparecerá aquí..."}
+            </Text>
+          </ScrollView>
 
-        {audioUrl ? (
-          <Text style={styles.audioText}>
-            Archivo de audio generado: {audioUrl}
-          </Text>
-        ) : null}
+          {audioUrl ? (
+            <Text style={styles.audioText}>
+              Archivo de audio generado: {audioUrl}
+            </Text>
+          ) : null}
 
-        <Text style={styles.questionText}>¿Te parece bien?</Text>
+          <Text style={styles.questionText}>¿Te parece bien?</Text>
 
-        {/* Botón "Pasar a audio" */}
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>Pasar a audio</Text>
-        </Pressable>
-      </View>
+          {/* Botón "Pasar a audio" */}
+          <Pressable style={styles.button}>
+            <Text style={styles.buttonText}>Pasar a audio</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Contenido principal para "Audio" */}
+      {selectedTab === "Audio" && (
+        <View style={styles.content}>
+          <Text style={styles.welcomeText}>Audios Generados</Text>
+          <ScrollView style={styles.audioList}>
+            {[1, 2, 3].map((item) => (
+              <View key={item} style={styles.audioItem}>
+                <Text style={styles.audioText}>
+                  Audio {item}: Ejemplo de archivo
+                </Text>
+                <Pressable style={styles.button}>
+                  <Text style={styles.buttonText}>Reproducir</Text>
+                </Pressable>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 };

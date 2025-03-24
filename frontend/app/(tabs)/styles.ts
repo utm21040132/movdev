@@ -88,7 +88,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333333',
     marginTop: 10,
-  },
+  },audioList: {
+  marginVertical: 10,
+},
+audioItem: {
+  padding: 15,
+  backgroundColor: "#f4f4f4",
+  marginBottom: 10,
+  borderRadius: 5,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+},selectedTab: {
+  borderBottomColor: "#007BFF",
+},
 });
 
 export default styles;
