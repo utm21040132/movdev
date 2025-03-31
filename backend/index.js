@@ -32,6 +32,7 @@ app.get("/", (req, res) => {
 
 // Ruta POST para la generación de historias y conversión a audio
 app.post("/historias", async (req, res) => {
+  console.log("se ejecuto");
     const prompt = req.body.prompt; // Obtenemos el prompt del cuerpo de la petición
   
     try {

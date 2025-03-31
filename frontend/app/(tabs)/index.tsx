@@ -8,7 +8,8 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import axios from "axios";
+import { Audio } from "expo-av"; // Importamos la librería para manejar audio
+import axios, { AxiosError } from "axios";
 import styles from "./styles"; // Importamos los estilos separados
 
 const Index: React.FC = () => {
@@ -16,8 +17,12 @@ const Index: React.FC = () => {
   const [generatedText, setGeneratedText] = useState(""); // Estado para la historia generada
   const [loading, setLoading] = useState(false); // Indicador de carga
   const [charCount, setCharCount] = useState(0); // Contador de caracteres
-  const [audioUrl, setAudioUrl] = useState(""); // URL del archivo de audio
+  const [audioUrl, setAudioUrl] = useState(""); // URL del archivo de audio generado
   const [selectedTab, setSelectedTab] = useState("Texto"); // Controla la pestaña activa
+
+  // Estados específicos para manejo de audio
+  const [sound, setSound] = useState<Audio.Sound | null>(null); // Objeto de sonido
+  const [playing, setPlaying] = useState(false); // Controla si se está reproduciendo
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -31,7 +36,7 @@ const Index: React.FC = () => {
       setGeneratedText(response.data.story);
       setAudioUrl(response.data.audio);
     } catch (error) {
-      console.error("Error al generar la historia:", error);
+      console.error("Error al generar la historia:", (error as AxiosError).message);
       alert(
         "Hubo un problema al conectar con el servidor. Verifica que el backend esté ejecutándose."
       );
@@ -42,6 +47,52 @@ const Index: React.FC = () => {
 
   const handleTabPress = (tab: string) => {
     setSelectedTab(tab);
+  };
+
+  const playAudio = async () => {
+    if (!audioUrl) {
+      alert("No hay un audio disponible para reproducir.");
+      return;
+    }
+
+    try {
+      // Si ya hay un audio reproduciéndose, primero lo detenemos
+      if (sound) {
+        await sound.unloadAsync(); // Descargamos el audio anterior
+        setSound(null);
+        setPlaying(false);
+      }
+
+      // Cargamos y reproducimos el nuevo audio
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true } // Comienza a reproducir automáticamente
+      );
+      setSound(newSound);
+      setPlaying(true);
+
+      // Detectamos cuando el audio termina
+      newSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setPlaying(false);
+        }
+      });
+    } catch (error) {
+      console.error("Error al reproducir audio:", error);
+    }
+  };
+
+  const stopAudio = async () => {
+    if (sound) {
+      try {
+        await sound.stopAsync(); // Detenemos el audio
+        await sound.unloadAsync(); // Descargamos el audio
+        setSound(null);
+        setPlaying(false);
+      } catch (error) {
+        console.error("Error al detener el audio:", error);
+      }
+    }
   };
 
   return (
@@ -110,30 +161,32 @@ const Index: React.FC = () => {
           ) : null}
 
           <Text style={styles.questionText}>¿Te parece bien?</Text>
-
-          {/* Botón "Pasar a audio" */}
-          <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>Pasar a audio</Text>
-          </Pressable>
         </View>
       )}
 
       {/* Contenido principal para "Audio" */}
       {selectedTab === "Audio" && (
         <View style={styles.content}>
-          <Text style={styles.welcomeText}>Audios Generados</Text>
-          <ScrollView style={styles.audioList}>
-            {[1, 2, 3].map((item) => (
-              <View key={item} style={styles.audioItem}>
-                <Text style={styles.audioText}>
-                  Audio {item}: Ejemplo de archivo
-                </Text>
-                <Pressable style={styles.button}>
-                  <Text style={styles.buttonText}>Reproducir</Text>
-                </Pressable>
-              </View>
-            ))}
-          </ScrollView>
+          <Text style={styles.welcomeText}>Reproductor de Audio</Text>
+          {audioUrl ? (
+            <Text style={styles.audioText}>
+              Nombre del archivo generado: {audioUrl}
+            </Text>
+          ) : null}
+          {audioUrl ? (
+            <Pressable
+              style={styles.button}
+              onPress={playing ? stopAudio : playAudio}
+            >
+              <Text style={styles.buttonText}>
+                {playing ? "Detener" : "Reproducir"}
+              </Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.audioText}>
+              No hay un audio generado para reproducir.
+            </Text>
+          )}
         </View>
       )}
     </View>
