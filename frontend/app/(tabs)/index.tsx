@@ -28,13 +28,14 @@ const Index: React.FC = () => {
     setLoading(true);
     try {
       // Solicitud POST al backend
-      const response = await axios.post("http://localhost:4000/historias", {
+      const response = await axios.post("https://51b9xs26-4000.usw3.devtunnels.ms/historias", {
         prompt: inputText, // Enviamos el texto ingresado
       });
 
       // Actualizamos el estado con los datos recibidos
       setGeneratedText(response.data.story);
       setAudioUrl(response.data.audio);
+      console.log("Audio URL:", response.data.audio); // Imprime la URL en consola para verificar
     } catch (error) {
       console.error("Error al generar la historia:", (error as AxiosError).message);
       alert(
@@ -56,28 +57,22 @@ const Index: React.FC = () => {
     }
 
     try {
-      // Si ya hay un audio reproduciéndose, primero lo detenemos
-      if (sound) {
-        await sound.unloadAsync(); // Descargamos el audio anterior
-        setSound(null);
-        setPlaying(false);
-      }
-
-      // Cargamos y reproducimos el nuevo audio
+      // Cargar y reproducir el nuevo audio
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUrl },
-        { shouldPlay: true } // Comienza a reproducir automáticamente
+        { shouldPlay: true } // Comienza la reproducción automática
       );
       setSound(newSound);
       setPlaying(true);
 
-      // Detectamos cuando el audio termina
+      // Detectar cuando la reproducción finaliza
       newSound.setOnPlaybackStatusUpdate((status) => {
         if (status.isLoaded && status.didJustFinish) {
           setPlaying(false);
         }
       });
     } catch (error) {
+      alert("Hubo un problema al cargar el audio. Verifica que el archivo está disponible.");
       console.error("Error al reproducir audio:", error);
     }
   };
@@ -154,12 +149,6 @@ const Index: React.FC = () => {
             </Text>
           </ScrollView>
 
-          {audioUrl ? (
-            <Text style={styles.audioText}>
-              Archivo de audio generado: {audioUrl}
-            </Text>
-          ) : null}
-
           <Text style={styles.questionText}>¿Te parece bien?</Text>
         </View>
       )}
@@ -170,9 +159,10 @@ const Index: React.FC = () => {
           <Text style={styles.welcomeText}>Reproductor de Audio</Text>
           {audioUrl ? (
             <Text style={styles.audioText}>
-              Nombre del archivo generado: {audioUrl}
+              URL del archivo generado: {audioUrl}
             </Text>
           ) : null}
+
           {audioUrl ? (
             <Pressable
               style={styles.button}
